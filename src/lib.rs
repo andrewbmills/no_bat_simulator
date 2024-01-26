@@ -203,6 +203,26 @@ pub fn simplify_outcome_codes(last_pitch: &char, outcome: &char) -> char {
     }
 }
 
+pub fn sum_walks(plate_appearances: &Vec<PlateAppearance>) -> i32 {
+    let mut walks = 0;
+    for plate_appearance in plate_appearances {
+        if plate_appearance.get_outcome() == &'W' {
+            walks += 1;
+        }
+    }
+    return walks;
+}
+
+pub fn sum_strikeouts(plate_appearances: &Vec<PlateAppearance>) -> i32 {
+    let mut strikeouts = 0;
+    for plate_appearance in plate_appearances {
+        if plate_appearance.get_outcome() == &'K' {
+            strikeouts += 1;
+        }
+    }
+    return strikeouts;
+}
+
 pub fn calculate_obp(plate_appearances: &Vec<PlateAppearance>) -> f32 {
     let mut hits = 0.0;
     let mut walks = 0.0;
@@ -291,11 +311,17 @@ fn simulate_until_outcome(zone_pct: f32, mut balls: i32, mut strikes: i32) -> (c
 pub fn simulate_plate_appearance_no_bat(
     appearance: &PlateAppearance,
     oswing_pct: f32,
+    swing_pct: f32,
     zone_pct: f32,
 ) -> PlateAppearance {
     let mut balls = 0;
     let mut strikes = 0;
     let mut pitches_no_bat: Vec<char> = Vec::new();
+    // In theses cases, we need the probability that the thrown pitch was outside the strike zone
+    // given that the player swung.
+    // p(outside zone | swing) = p(swing | outside zone) * p(outside zone) / p(swing) - or -
+    // p(outside zone | swing) = (OSwing% * (1 - Zone%)) / Swing%
+    let prob_ball_given_swing = (oswing_pct * (100.0 - zone_pct)) / swing_pct;
     for pitch in &appearance.pitches {
         // B, balls stay balls,
         // C, strikes with no swing stay strikes,
@@ -305,6 +331,7 @@ pub fn simulate_plate_appearance_no_bat(
         // X, ball put into play requires us to re-simulate the pitch with no bat
         // if we still have no outcome by the end, we need to simulate until we get one
         let pitch = pitch.to_owned();
+        
         if pitch == 'B' || pitch == 'C' || pitch == 'I' || pitch == 'H' {
             pitches_no_bat.push(pitch);
             if pitch == 'B' || pitch == 'I' {
@@ -318,7 +345,7 @@ pub fn simulate_plate_appearance_no_bat(
             // Batter swung at the pitch, so we need to re-simulate the pitch without the bat
             // Probability that it was inside the strike zone
             let zone = rand::thread_rng().gen_range(0.0..100.0);
-            if zone <= oswing_pct {
+            if zone <= prob_ball_given_swing {
                 pitches_no_bat.push('B');
                 balls += 1;
             } else {

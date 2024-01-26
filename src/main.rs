@@ -1,7 +1,7 @@
 use no_bat_simulator::{
     calculate_obp, convert_string_to_date, is_ball, is_ball_put_into_play_or_hit_by_pitch, is_foul,
     is_strike, simplify_outcome_codes, simplify_pitch_codes, simulate_plate_appearance_no_bat,
-    Date,
+    Date, sum_walks, sum_strikeouts,
 };
 use std::fs;
 use std::path::Path;
@@ -136,7 +136,7 @@ fn read_in_plate_appearances(
     return plate_appearances;
 }
 
-fn read_oswing_and_zone_pct_from_file(player_name: &String, year: i32) -> (f32, f32) {
+fn read_plate_discipline_from_file(player_name: &String, year: i32) -> (f32, f32, f32) {
     let (player_firstname, player_lastname) = split_player_name_into_first_and_last(player_name);
     let path_text = format!("{DATA_DIR}/{}eve/{}_plate_discipline.csv", year, year);
     let path_in = Path::new(&path_text);
@@ -159,7 +159,16 @@ fn read_oswing_and_zone_pct_from_file(player_name: &String, year: i32) -> (f32, 
                     oswing_pct_string, e
                 ),
             };
-            let mut zone_pct_string = line_data[3].to_string();
+            let mut swing_pct_string = line_data[3].to_string();
+            swing_pct_string.pop(); // removed percent sign
+            let swing_pct = match swing_pct_string.parse::<f32>() {
+                Ok(swing_pct) => swing_pct,
+                Err(e) => panic!(
+                    "Error parsing oswing_pct string: {}, ({})",
+                    swing_pct_string, e
+                ),
+            };
+            let mut zone_pct_string = line_data[4].to_string();
             zone_pct_string.pop(); // removed newline
             zone_pct_string.pop(); // removed percent sign
             let zone_pct = match zone_pct_string.parse::<f32>() {
@@ -169,10 +178,10 @@ fn read_oswing_and_zone_pct_from_file(player_name: &String, year: i32) -> (f32, 
                     zone_pct_string, e
                 ),
             };
-            return (oswing_pct, zone_pct);
+            return (oswing_pct, swing_pct, zone_pct);
         }
     }
-    (-1.0, -1.0)
+    (-1.0, -1.0, -1.0)
 }
 
 fn main() {
@@ -203,24 +212,26 @@ fn main() {
     );
 
     // Read the oswing_pct and zone_pct from the player's 2023 .EVA file
-    let (oswing_pct, zone_pct) = read_oswing_and_zone_pct_from_file(player_name, year);
+    let (oswing_pct, swing_pct, zone_pct) = read_plate_discipline_from_file(player_name, year);
 
     // Resimulate all their 2023 at-bats as if they had no bat
     let mut plate_appearances_no_bat: Vec<PlateAppearance> = Vec::new();
     for appearance in &plate_appearances {
         plate_appearances_no_bat.push(simulate_plate_appearance_no_bat(
-            appearance, oswing_pct, zone_pct,
+            appearance, oswing_pct, swing_pct, zone_pct,
         ));
     }
 
     // Calculate their OBP for 2023 again
     println!(
-        "OBP for {} in {} without a bat: {}",
+        "OBP for {} in {} without a bat: {} with {} walks and {} strikeouts",
         player_name,
         year,
-        calculate_obp(&plate_appearances_no_bat)
+        calculate_obp(&plate_appearances_no_bat),
+        sum_walks(&plate_appearances_no_bat),
+        sum_strikeouts(&plate_appearances_no_bat),
     );
-
+    
     // All plate appearance with/without bat for debug
     if debug {
         for i in 0..plate_appearances.len() {
