@@ -1,7 +1,7 @@
 use no_bat_simulator::{
-    calculate_obp, calculate_obp_from_raw_outcomes, convert_string_to_date, is_ball,
-    is_ball_put_into_play_or_hit_by_pitch, is_foul, is_strike, simplify_outcome_codes,
-    simplify_pitch_codes, simulate_plate_appearance_no_bat, Date,
+    calculate_obp, convert_string_to_date, is_ball, is_ball_put_into_play_or_hit_by_pitch, is_foul,
+    is_strike, simplify_outcome_codes, simplify_pitch_codes, simulate_plate_appearance_no_bat,
+    Date,
 };
 use std::fs;
 use std::path::Path;
