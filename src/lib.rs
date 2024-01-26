@@ -148,17 +148,19 @@ pub fn simplify_outcome_codes(outcome: char) -> char {
 pub fn calculate_obp(plate_appearances: &Vec<PlateAppearance>) -> f32 {
     let mut hits = 0;
     let mut walks = 0;
-    let mut at_bats = plate_appearances.len();
+    let mut at_bats = 0;
     for plate_appearance in plate_appearances {
         let outcome = plate_appearance.get_outcome();
         if outcome == &'S' || outcome == &'D' || outcome == &'T' || outcome == &'H' {
             hits += 1;
+            at_bats += 1;
         }
         if outcome == &'W' || outcome == &'I' {
             walks += 1;
+            at_bats += 1;
         }
-        if outcome == &'E' {
-            at_bats -= 1;
+        if outcome == &'O' || outcome == &'K' {
+            at_bats += 1;
         }
     }
     return (hits + walks) as f32 / at_bats as f32;
@@ -221,6 +223,9 @@ pub fn simulate_plate_appearance_no_bat(
                 pitches_no_bat.push('C');
                 strikes += 1;
             }
+        }
+        if balls == 4 || strikes == 3 {
+            break;
         }
     }
 
