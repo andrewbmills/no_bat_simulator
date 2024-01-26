@@ -14,7 +14,5 @@ Make sure you have a recent version of Rust installed including cargo.
 > git clone origin https://github.com/andrewbmills/no_bat_simulator.git
 > cargo init
 > cargo build
-> cargo run " 
+> cargo run "Barry Bonds" "SFN" 2004
 ```
-# 
-
