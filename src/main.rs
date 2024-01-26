@@ -48,7 +48,6 @@ fn read_plate_appearances_from_file(player_name: &String, team_name: &String, ye
     let path_text = format!(
         "{DATA_DIR}/{}eve/{}{team_name}.EVN", year, year
     );
-    println!("{}", &path_text);
     let path_in = Path::new(&path_text);
     let contents = fs::read_to_string(path_in).expect("Something went wrong reading the file");
     // Split data by newline
@@ -156,8 +155,9 @@ fn main() {
     // Calculate the player's OBP for 2023
     let plate_appearances = read_plate_appearances_from_file(player_name, team_name, year);
     println!(
-        "OBP for {} in 2023: {}",
+        "OBP for {} in {}: {}",
         player_name,
+        year, 
         calculate_obp(&plate_appearances)
     );
 
@@ -176,8 +176,9 @@ fn main() {
 
     // Calculate their OBP for 2023 again
     println!(
-        "OBP for {} in 2023 without a bat: {}",
+        "OBP for {} in {} without a bat: {}",
         player_name,
+        year,
         calculate_obp(&plate_appearances_no_bat)
     );
 
