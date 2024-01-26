@@ -7,6 +7,8 @@ use std::path::Path;
 
 use no_bat_simulator::{Date, PlateAppearance};
 
+static DATA_DIR: &str = "C:/Users/Andrew/Documents/Coding/no_bat_simulator/data";
+
 fn split_player_name_into_first_and_last(player_name: &String) -> (String, String) {
     let player_name_split = player_name.split(" ").collect::<Vec<&str>>();
     let player_firstname = player_name_split[0].to_owned();
@@ -14,12 +16,12 @@ fn split_player_name_into_first_and_last(player_name: &String) -> (String, Strin
     (player_firstname, player_lastname)
 }
 
-fn get_player_id_from_file(player_name: &String, team_name: &String) -> String {
+fn get_player_id_from_file(player_name: &String, team_name: &String, year: i32) -> String {
     let (player_firstname, player_lastname) = split_player_name_into_first_and_last(player_name);
 
     // Open the .ROS file for the player's team and find the player's ID
     let path_text = format!(
-        "C:/Users/Andrew/Documents/Coding/no_bat_simulator/data/2023eve/{team_name}2023.ROS"
+        "{DATA_DIR}/{}eve/{team_name}{}.ROS", year, year
     );
     let path_in_roster = Path::new(&path_text);
     let contents_roster =
@@ -40,12 +42,13 @@ fn get_player_id_from_file(player_name: &String, team_name: &String) -> String {
 
 fn read_plate_appearances_from_file(player_name: &String, team_name: &String, year: i32) -> Vec<PlateAppearance> {
     let mut plate_appearances: Vec<PlateAppearance> = Vec::new();
-    let player_id = get_player_id_from_file(player_name, team_name);
+    let player_id = get_player_id_from_file(player_name, team_name, year);
 
     // Open the .EVA file for the player's team
     let path_text = format!(
-        "C:/Users/Andrew/Documents/Coding/no_bat_simulator/data/{year}eve/{year}{team_name}.EVA"
+        "{DATA_DIR}/{}eve/{}{team_name}.EVN", year, year
     );
+    println!("{}", &path_text);
     let path_in = Path::new(&path_text);
     let contents = fs::read_to_string(path_in).expect("Something went wrong reading the file");
     // Split data by newline
@@ -92,9 +95,9 @@ fn read_plate_appearances_from_file(player_name: &String, team_name: &String, ye
     return plate_appearances;
 }
 
-fn read_oswing_and_zone_pct_from_file(player_name: &String) -> (f32, f32) {
+fn read_oswing_and_zone_pct_from_file(player_name: &String, year: i32) -> (f32, f32) {
     let (player_firstname, player_lastname) = split_player_name_into_first_and_last(player_name);
-    let path_text = "C:/Users/Andrew/Documents/Coding/no_bat_simulator/data/2023eve/2023_plate_discipline_cleaned.csv";
+    let path_text = format!("{DATA_DIR}/{}eve/{}_plate_discipline.csv", year, year);
     let path_in = Path::new(&path_text);
     let contents = fs::read_to_string(path_in).expect("Something went wrong reading the file");
     // Split data by newline
