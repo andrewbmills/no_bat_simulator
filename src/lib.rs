@@ -232,7 +232,12 @@ fn is_error(outcome: &String) -> bool {
     if id_found.is_none() {
         return false;
     } else {
-        if outcome.chars().nth(id_found.unwrap() + 1).unwrap().is_digit(10) {
+        if outcome
+            .chars()
+            .nth(id_found.unwrap() + 1)
+            .unwrap()
+            .is_digit(10)
+        {
             return true;
         }
         return false;

@@ -1,5 +1,7 @@
 use no_bat_simulator::{
-    calculate_obp, calculate_obp_from_raw_outcomes, convert_string_to_date, is_ball, is_ball_put_into_play_or_hit_by_pitch, is_foul, is_strike, simplify_outcome_codes, simplify_pitch_codes, simulate_plate_appearance_no_bat, Date
+    calculate_obp, calculate_obp_from_raw_outcomes, convert_string_to_date, is_ball,
+    is_ball_put_into_play_or_hit_by_pitch, is_foul, is_strike, simplify_outcome_codes,
+    simplify_pitch_codes, simulate_plate_appearance_no_bat, Date,
 };
 use std::fs;
 use std::path::Path;
@@ -37,7 +39,11 @@ fn get_player_id_from_file(player_name: &String, team_name: &String, year: i32) 
     return blank_string.to_owned();
 }
 
-fn read_plate_appearances_from_file(player_id: &String, player_name: &String, path: &Path) -> Vec<PlateAppearance> {
+fn read_plate_appearances_from_file(
+    player_id: &String,
+    player_name: &String,
+    path: &Path,
+) -> Vec<PlateAppearance> {
     let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
     // Split data by newline
     let lines = contents.split("\n");
@@ -71,14 +77,13 @@ fn read_plate_appearances_from_file(player_id: &String, player_name: &String, pa
                     strikes += 1;
                 } else if is_foul(pitch) {
                     strikes = std::cmp::min(strikes + 1, 2);
-                }
-                else if is_ball_put_into_play_or_hit_by_pitch(pitch) {
+                } else if is_ball_put_into_play_or_hit_by_pitch(pitch) {
                     // If the pitch was put into play or hit the batter, the plate appearance is over
                     let outcome_complex = line_data[6].chars().collect::<Vec<char>>()[0];
                     outcome = simplify_outcome_codes(pitch, &outcome_complex);
                 }
             }
-            
+
             // Parse the outcome of the plate appearance
             if outcome == 'N' {
                 if balls == 4 {
