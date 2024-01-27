@@ -44,7 +44,7 @@ fn read_plate_appearances_from_file(
     player_name: &String,
     path: &Path,
 ) -> Vec<PlateAppearance> {
-    let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
+    let contents = fs::read_to_string(path).expect("Something went wrong reading Retrosheet files");
     // Split data by newline
     let lines = contents.split("\n");
     let mut last_game_date = Date::new(0, 0, 0);
@@ -137,10 +137,9 @@ fn read_in_plate_appearances(
 }
 
 fn read_plate_discipline_from_file(player_name: &String, year: i32) -> (f32, f32, f32) {
-    let (player_firstname, player_lastname) = split_player_name_into_first_and_last(player_name);
     let path_text = format!("{DATA_DIR}/{}eve/{}_plate_discipline.csv", year, year);
     let path_in = Path::new(&path_text);
-    let contents = fs::read_to_string(path_in).expect("Something went wrong reading the file");
+    let contents = fs::read_to_string(path_in).expect("Something went wrong reading plate discipline file");
     // Split data by newline
     let lines = contents.split("\n");
     for line in lines {
@@ -148,9 +147,9 @@ fn read_plate_discipline_from_file(player_name: &String, year: i32) -> (f32, f32
         let mut line_trimmed = line.to_string();
         line_trimmed.pop();
         // Check if the line contains the player's name
-        let line_data = line_trimmed.split(", ").collect::<Vec<&str>>();
-        if line_data[0] == player_firstname && line_data[1] == player_lastname {
-            let mut oswing_pct_string = line_data[2].to_string();
+        let line_data = line_trimmed.split("\t").collect::<Vec<&str>>();
+        if line_data[1] == player_name {
+            let mut oswing_pct_string = line_data[3].to_string();
             oswing_pct_string.pop(); // removed percent sign
             let oswing_pct = match oswing_pct_string.parse::<f32>() {
                 Ok(oswing_pct) => oswing_pct,
@@ -159,7 +158,7 @@ fn read_plate_discipline_from_file(player_name: &String, year: i32) -> (f32, f32
                     oswing_pct_string, e
                 ),
             };
-            let mut swing_pct_string = line_data[3].to_string();
+            let mut swing_pct_string = line_data[5].to_string();
             swing_pct_string.pop(); // removed percent sign
             let swing_pct = match swing_pct_string.parse::<f32>() {
                 Ok(swing_pct) => swing_pct,
@@ -168,7 +167,7 @@ fn read_plate_discipline_from_file(player_name: &String, year: i32) -> (f32, f32
                     swing_pct_string, e
                 ),
             };
-            let mut zone_pct_string = line_data[4].to_string();
+            let mut zone_pct_string = line_data[9].to_string();
             zone_pct_string.pop(); // removed newline
             zone_pct_string.pop(); // removed percent sign
             let zone_pct = match zone_pct_string.parse::<f32>() {
@@ -231,7 +230,7 @@ fn main() {
         sum_walks(&plate_appearances_no_bat),
         sum_strikeouts(&plate_appearances_no_bat),
     );
-    
+
     // All plate appearance with/without bat for debug
     if debug {
         for i in 0..plate_appearances.len() {
