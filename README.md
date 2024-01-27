@@ -13,6 +13,6 @@ Make sure you have a recent version of Rust installed including cargo.
 > cargo init
 > cargo build
 > cargo run "Barry Bonds" "SFN" 2004
-OBP for Barry Bonds in 2004: 0.6094
-OBP for Barry Bonds in 2004 without a bat: 0.601
+OBP for Barry Bonds in 2004: 0.60940033
+OBP for Barry Bonds in 2004 without a bat: 0.6029173 with 372 walks and 245 strikeouts
 ```
