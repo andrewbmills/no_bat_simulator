@@ -8,7 +8,7 @@ use std::path::Path;
 
 use no_bat_simulator::PlateAppearance;
 
-static DATA_DIR: &str = "C:/Users/Andrew/Documents/Coding/no_bat_simulator/data";
+static DATA_DIR: &str = "data";
 
 fn split_player_name_into_first_and_last(player_name: &String) -> (String, String) {
     let player_name_split = player_name.split(" ").collect::<Vec<&str>>();
