@@ -20,8 +20,8 @@ OBP for Barry Bonds in 2004 without a bat: 0.6029173 with 372 walks and 245 stri
 
 # Importing data from Retrosheet
 
-Head to https://www.retrosheet.org/game.htm and select a season from "Regular Season Event Files."  Extract the corresponding "<year>eve" directory to the project's "data" directory.  The file structure should look something like: "no_bat_simulator/data/<year>eve"
+Head to [Retrosheet](https://www.retrosheet.org/game.htm) and select a season from "Regular Season Event Files."  Extract the corresponding "'year'eve" directory to the project's "data" directory.  The file structure should look something like: "no_bat_simulator/data/<year>eve"
 
 # Creating a plate discipline data file from Fan Graphs
 
-The plate discipline statistics for this project are available at [fangraphs.com]{https://www.fangraphs.com/leaders/major-league?pos=all&stats=bat&lg=all&qual=y&type=5&month=0&ind=0&team=0&rost=0&age=0&filter=&player=&startdate=&enddate=&pageitems=2000000000&season1=2023&season=2023}.  Change the "Single Season" field to match your season statistics of interest and copy the entire batters table into a file called "<year>_plate_discipline.csv" inside of the "/data/<year>eve/" directory.
+The plate discipline statistics for this project are available at [fangraphs.com](https://www.fangraphs.com/leaders/major-league?pos=all&stats=bat&lg=all&qual=y&type=5&month=0&ind=0&team=0&rost=0&age=0&filter=&player=&startdate=&enddate=&pageitems=2000000000&season1=2023&season=2023).  Change the "Single Season" field to match your season statistics of interest and copy the entire batters table into a file called "'year'_plate_discipline.csv" inside of the "/data/'year'eve/" directory.
