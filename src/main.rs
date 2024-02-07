@@ -1,7 +1,7 @@
 use no_bat_simulator::{
     calculate_obp, convert_string_to_date, is_ball, is_ball_put_into_play_or_hit_by_pitch, is_foul,
     is_strike, simplify_outcome_codes, simplify_pitch_codes, simulate_plate_appearance_no_bat,
-    Date, sum_walks, sum_strikeouts,
+    Date,
 };
 use std::fs;
 use std::path::Path;
@@ -29,6 +29,9 @@ fn get_player_id_from_file(player_name: &String, team_name: &String, year: i32) 
     for line in lines {
         // Check if the line contains the player's name
         let line_data = line.split(",").collect::<Vec<&str>>();
+        if line_data.len() < 3 {
+            continue;
+        }
         if line_data[1] == &player_lastname && line_data[2] == &player_firstname {
             // If so, return the player's ID
             return line_data[0].to_owned();
@@ -142,12 +145,16 @@ fn read_plate_discipline_from_file(player_name: &String, year: i32) -> (f32, f32
     let contents = fs::read_to_string(path_in).expect("Something went wrong reading plate discipline file");
     // Split data by newline
     let lines = contents.split("\n");
+    println!("{}", player_name);
     for line in lines {
         // Remove trailing newline character
         let mut line_trimmed = line.to_string();
         line_trimmed.pop();
         // Check if the line contains the player's name
         let line_data = line_trimmed.split("\t").collect::<Vec<&str>>();
+        if line_data.len() < 10 {
+            continue;
+        }
         if line_data[1] == player_name {
             let mut oswing_pct_string = line_data[3].to_string();
             oswing_pct_string.pop(); // removed percent sign
@@ -183,61 +190,100 @@ fn read_plate_discipline_from_file(player_name: &String, year: i32) -> (f32, f32
     (-1.0, -1.0, -1.0)
 }
 
-fn main() {
-    // Parse the command line arguments
-    let args: Vec<String> = std::env::args().collect();
-    let mut debug = false;
+fn parse_input_arguments(args: Vec<String>) -> (String, String, i32) {
     if args.len() < 4 {
-        panic!("Please provide a player name, ateam name, and a year as arguments");
-    } else if args.len() > 4 {
-        if args[4] == "debug" {
-            println!("Debug mode enabled");
-            debug = true;
+        if args[1] == "all" {
+            let player_name = args[1].to_owned();
+            let team_name = "".to_owned();
+            let year = args[2].parse::<i32>().unwrap();
+            return (player_name, team_name, year);
+        }
+        panic!("Please provide a player name, a team name, and a year as arguments");
+    }
+    let player_name = args[1].to_owned();
+    let team_name = args[2].to_owned();
+    let year = args[3].parse::<i32>().unwrap();
+    return (player_name, team_name, year);
+}
+
+fn read_all_player_names(year: i32) -> Vec<(String, String)> {
+    let mut player_team_names: Vec<(String, String)> = Vec::new();
+    for dir in std::fs::read_dir(format!("{DATA_DIR}/{}eve/", year)).unwrap() {
+        let path = dir.unwrap().path();
+        let path_str = path.to_str().unwrap();
+        if path_str.ends_with(".ROS") {
+            let team_name = path_str[(path_str.len()-11)..(path_str.len()-8)].to_owned();
+            let contents_roster =
+                fs::read_to_string(path).expect("Something went wrong reading roster files");
+            let roster_lines = contents_roster.split("\n").collect::<Vec<&str>>();
+            for roster_line in roster_lines {
+                let line_data = roster_line.split(",").collect::<Vec<&str>>();
+                if line_data.len() > 2 {
+                    let mut player_name = line_data[2].to_owned();
+                    player_name.push_str(" ");
+                    player_name.push_str(line_data[1]);
+                    player_team_names.push((player_name, team_name.clone()));
+                }
+            }
         }
     }
+    return player_team_names;
+}
 
-    // Get the first argument passed to the program which should be the name of a player in the 2023 MLB season
-    let player_name = &args[1];
-    let team_name = &args[2];
-    let year = args[3].parse::<i32>().unwrap();
-
-    // Calculate the player's OBP for 2023
-    let plate_appearances = read_in_plate_appearances(player_name, team_name, year);
-    println!(
-        "OBP for {} in {}: {}",
-        player_name,
-        year,
-        calculate_obp(&plate_appearances)
-    );
-
-    // Read the oswing_pct and zone_pct from the player's 2023 .EVA file
+fn sim_player_with_and_without_bat(player_name: &String, team_name: &String, year: i32) -> (f32, f32) {
     let (oswing_pct, swing_pct, zone_pct) = read_plate_discipline_from_file(player_name, year);
-
-    // Resimulate all their 2023 at-bats as if they had no bat
+    if oswing_pct == -1.0 {
+        // probably a pitcher
+        return (0.0, 0.0);
+    }
+    let plate_appearances = read_in_plate_appearances(player_name, team_name, year);
     let mut plate_appearances_no_bat: Vec<PlateAppearance> = Vec::new();
     for appearance in &plate_appearances {
         plate_appearances_no_bat.push(simulate_plate_appearance_no_bat(
             appearance, oswing_pct, swing_pct, zone_pct,
         ));
     }
+    let obp = calculate_obp(&plate_appearances);
+    let obp_no_bat = calculate_obp(&plate_appearances_no_bat);
+    return (obp, obp_no_bat);
+}
 
-    // Calculate their OBP for 2023 again
-    println!(
-        "OBP for {} in {} without a bat: {} with {} walks and {} strikeouts",
-        player_name,
-        year,
-        calculate_obp(&plate_appearances_no_bat),
-        sum_walks(&plate_appearances_no_bat),
-        sum_strikeouts(&plate_appearances_no_bat),
-    );
+fn main() {
+    // Collect input arguments
+    let args: Vec<String> = std::env::args().collect();
+    let (player_name, team_name, year) = parse_input_arguments(args);
 
-    // All plate appearance with/without bat for debug
-    if debug {
-        for i in 0..plate_appearances.len() {
-            println!(
-                "{} ---> {}",
-                plate_appearances[i], plate_appearances_no_bat[i]
-            );
+    // If player_name argument is "all", then return a top 20 list of players with the highest OBP without a bat
+    if player_name == "all" {
+        let player_team_names = read_all_player_names(year);
+        let mut obp_no_bat_list: Vec<(String, f32, f32)> = Vec::new();
+        for (player_name, team_name) in player_team_names {
+            let (obp, obp_no_bat) = sim_player_with_and_without_bat(&player_name, &team_name, year);
+            obp_no_bat_list.push((player_name, obp, obp_no_bat));
         }
+        obp_no_bat_list.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        println!("Top 20 OBP without a bat in {}", year);
+        for (i, (player_name, obp, obp_no_bat)) in obp_no_bat_list.iter().enumerate() {
+            if i >= 20 {
+                break;
+            }
+            println!("{}: {}, {}", player_name, obp, obp_no_bat);
+        }
+        return;
+    } else {
+         // Calculate the player's OBP for 2023 with and without bat
+        let (obp, obp_no_bat) = sim_player_with_and_without_bat(&player_name, &team_name, year);
+        println!(
+            "OBP for {} in {}: {}",
+            player_name,
+            year,
+            obp
+        );
+        println!(
+            "OBP for {} in {} without a bat: {}",
+            player_name,
+            year,
+            obp_no_bat
+        );
     }
 }
