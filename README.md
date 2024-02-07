@@ -10,8 +10,8 @@ This got me thinking... what about the other great players?  What about players 
 
 Make sure you have a recent version of Rust installed including cargo.
 ```
-> git clone origin https://github.com/andrewbmills/no_bat_simulator.git
-> cargo init
+> git clone https://github.com/andrewbmills/no_bat_simulator.git
+> cd no_bat_simulator
 > cargo build
 > cargo run "Barry Bonds" "SFN" 2004
 OBP for Barry Bonds in 2004: 0.60940033
